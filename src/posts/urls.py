@@ -9,6 +9,6 @@ app_name = 'posts'
 
 urlpatterns = [
   path('', post_list_and_create, name='main-board'),
-  path('api/posts/', load_post_data_view, name='posts-data'),
+  path('api/posts/<int:num_posts>/', load_post_data_view, name='posts-data'),
   path('hello-world/', hello_world_view, name='hello-world'),
 ]

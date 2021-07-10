@@ -11,5 +11,12 @@
 {% block content %}
   {% comment %} {% for obj in qs %}<b>{{ obj.title }}</b> - {{ obj.body }}</br>  {% endfor %} {% endcomment %}
   <div id="posts-box"></div>
-  <div id="hello-world"></div>
+  <div id="spinner" class="text-center">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+  <div class="text-center mb-3 not-visible" id="end-box">
+     <button class="btn btn-primary" id="load-btn">Load more...</button>
+  </div>
 {% endblock content %}

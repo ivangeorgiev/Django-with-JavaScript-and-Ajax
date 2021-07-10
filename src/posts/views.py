@@ -7,10 +7,20 @@ def post_list_and_create(request):
   qs = Post.objects.all()
   return render(request, 'posts/main.html', {'qs':qs})
 
-def load_post_data_view(request):
+def load_post_data_view(request, num_posts):
+  def post_as_dict(post:Post):
+    d = post.as_dict()
+    d['liked'] = request.user in post.liked.all()
+    return d
+
   qs = Post.objects.all()
-  data = [o.as_dict() for o in qs]
-  return JsonResponse({'data':data})
+  visible = 3
+  upper = num_posts
+  lower = num_posts - visible
+  size = qs.count()
+
+  data = [post_as_dict(o) for o in qs]
+  return JsonResponse({'data':data[lower:upper], 'size':size, 'lower':lower, 'upper':upper})
 
 def hello_world_view(request):
   return JsonResponse({'text':'hello ajax'})

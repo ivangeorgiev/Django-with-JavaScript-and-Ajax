@@ -461,3 +461,203 @@ $.ajax({
 ```
 
 Navigate to `http://localhost:8000` to explore the result.
+
+## 3.9. Adding the Spinner
+
+Go to https://getbootstrap.com/ and navigate to [Docs](https://getbootstrap.com/docs/5.0/getting-started/introduction/).
+
+In the `Search docs...` box search for *spinner*. Scroll down to the Border spinner and copy the HTML.
+
+Add the spinner HTML to `posts/templates/posts/main.html`:
+
+```django
+{% block content %}
+  {% comment %} {% for obj in qs %}<b>{{ obj.title }}</b> - {{ obj.body }}</br>  {% endfor %} {% endcomment %}
+  <div class="spinner-border" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <div id="posts-box"></div>
+{% endblock content %}
+```
+
+Modify `posts/static/posts/main.js`:
+
+```javascript
+const postBox = document.getElementById('posts-box')
+const spinner = document.getElementById('spinner')
+
+$.ajax({
+  type: 'GET',
+  url: '/api/posts/',
+  success: resp => {
+    console.log(resp)
+    setTimeout(() => {
+      spinner.classList.add('not-visible')
+      postBox.innerHTML = ''
+      resp.data.forEach( el => {
+        postBox.innerHTML += `
+          <b>${el.title}</b> - ${el.body}<br />
+        `
+      })
+    }, 500)
+  },
+  error: err => {
+    console.error(err)
+  }
+})
+```
+
+## 3.10. Creating Posts Cards
+
+Go to https://getbootstrap.com/ and navigate to [Docs](https://getbootstrap.com/docs/5.0/getting-started/introduction/).
+
+In the `Search docs...` box search for *cards*.  Copy the HTML for the first card example:
+
+```html
+<div class="card" style="width: 18rem;">
+  <img src="..." class="card-img-top" alt="...">
+  <div class="card-body">
+    <h5 class="card-title">Card title</h5>
+    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+    <a href="#" class="btn btn-primary">Details...</a>
+  </div>
+</div>
+```
+
+Modify `posts/static/posts/main.js`:
+
+```javascript
+        postBox.innerHTML += `
+          <div class="card mb-2">
+          <!-- <img src="..." class="card-img-top" alt="..."> --!>
+          <div class="card-body">
+            <h5 class="card-title">${el.title}</h5>
+            <p class="card-text">${el.body}</p>
+            <a href="#" class="btn btn-primary">Details...</a>
+          </div>
+        </div>
+        `
+```
+
+Adjust the spinner box in `posts/templates/posts/main.html` to have `text-center` class:
+
+```django
+  <div id="spinner" class="text-center">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+```
+
+## 3.11. Loading More Posts with a Button Click
+
+Modify `posts/urls.py`:
+
+```python
+urlpatterns = [
+  path('', post_list_and_create, name='main-board'),
+  path('api/posts/<int:num_posts>/', load_post_data_view, name='posts-data'),
+  path('hello-world/', hello_world_view, name='hello-world'),
+]
+```
+
+Modify `posts/templates/posts/main.html`:
+
+```django
+{% block content %}
+  {% comment %} {% for obj in qs %}<b>{{ obj.title }}</b> - {{ obj.body }}</br>  {% endfor %} {% endcomment %}
+  <div id="posts-box"></div>
+  <div id="spinner" class="text-center">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+  <div class="text-center mb-3" id="end-box">
+     <button class="btn btn-primary" id="load-btn">Load more...</button>
+  </div>
+{% endblock content %}
+```
+
+
+
+Modify `posts/views.py`:
+
+```python
+def load_post_data_view(request, num_posts):
+  def post_as_dict(post:Post):
+    d = post.as_dict()
+    d['liked'] = request.user in post.liked.all()
+    return d
+  visible = 3
+  upper = num_posts
+  lower = num_posts - visible
+  size = Post.objects.all().count()
+
+  qs = Post.objects.all()
+  data = [post_as_dict(o) for o in qs]
+  return JsonResponse({'data':data[lower:upper], 'size':size})
+```
+
+Modify `posts/static/posts/main.js`:
+
+- wrap ajax in a function and adjust the ajax url
+
+```javascript
+const postBox = document.getElementById('posts-box')
+const spinnerBox = document.getElementById('spinner')
+const loadBtn = document.getElementById('load-btn')
+const endBox = document.getElementById('end-box')
+
+let visible = 3
+
+const get_data = () => {
+  endBox.classList.add('not-visible')
+  $.ajax({
+    type: 'GET',
+    url: `/api/posts/${visible}/`,
+    success: resp => {
+      console.log(resp)
+      // Give some time for the spinner to appear.
+      setTimeout(() => {
+        spinnerBox.classList.add('not-visible')
+        // postBox.innerHTML = ''
+        resp.data.forEach( el => {
+          postBox.innerHTML += `
+            <div class="card mb-2">
+            <!-- <img src="..." class="card-img-top" alt="..."> --!>
+            <div class="card-body">
+              <h5 class="card-title">${el.title}</h5>
+              <p class="card-text">${el.body}</p>
+            </div>
+            <div class="card-footer">
+              <div class="row">
+                <div class="col-2"><a href="#" class="btn btn-primary">Details...</a></div>
+                <div class="col-2"><a href="#" class="btn btn-primary">Like</a></div>
+              </div>
+            </div>
+          </div>
+          `
+        })
+        if (resp.size == 0) {
+          endBox.innerHTML = 'No posts added yet...'
+        } else if (visible < resp.size) {
+          endBox.classList.remove('not-visible')
+        }
+      }, 100)
+    },
+    error: err => {
+      console.error(err)
+    }
+  })
+}
+
+loadBtn.addEventListener('click', () => {
+  spinnerBox.classList.remove('not-visible')
+  visible += 3
+  get_data()
+})
+
+get_data()
+
+```
+
