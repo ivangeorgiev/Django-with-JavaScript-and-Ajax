@@ -128,3 +128,73 @@ Create empty `/src/static/functions.js`
 
 Create `/src/templates/base.html` (copy from the course repo) and `/src/templates/navbar.html`
 
+## 3.3. Creating the Models
+
+Create Profile class in `/src/profiles/models.py`
+
+```python
+from django.db import models
+from django.contrib.auth.models import User
+
+# Create your models here.
+class Profile(models.Model):
+  user = models.OneToOneField(User, on_delete=models.CASCADE)
+  bio = models.TextField(blank=True)
+  avatar = models.ImageField(default='avatar.png',upload_to='avatars')
+  updated = models.DateTimeField(auto_now=True)
+  created = models.DateTimeField(auto_now_add=True)
+
+  def __str__(self):
+    return f'profile of the user {self.user.username}'
+```
+
+**Upload file** `avatar.png` to `/src/media`
+
+Create Post class in `/src/posts/models.py`
+
+```python
+from django.db import models
+from django.contrib.auth.models import User
+from profiles.models import Profile
+
+# Create your models here.
+class Post(models.Model):
+  title = models.CharField(max_length=200)
+  body = models.TextField()
+  liked = models.ManyToManyField(User, blank=True)
+  author = models.ForeignKey(Profile, on_delete=models.CASCADE)
+  updated = models.DateTimeField(auto_now=True)
+  created = models.DateTimeField(auto_now_add=True)
+
+  def __str__(self):
+    return f'{self.title}'
+```
+
+**Register the classes** in project's `admin.py`
+
+`/src/posts/admin.py`
+
+```python
+from django.contrib import admin
+from .models import Post
+
+# Register your models here.
+admin.site.register(Post)
+```
+
+`/src/profiles/admin.py`
+
+```python
+from django.contrib import admin
+from .models import Profile
+
+# Register your models here.
+admin.site.register(Profile)
+```
+
+**Login / refresh Django admin console** to see the new models.
+
+**Create a profile for the superuser** from admin.
+
+
+
