@@ -233,3 +233,73 @@ default_app_config = 'profiles.apps.ProfilesConfig'
 
 Go to django admin and create `test_user` verify profile got created.
 
+## 3.5. Adding First View and Template
+
+Create 6 posts in django admin:
+
+- Title: Post N
+- Body: Description of Post N
+- Author: `<select>`
+
+Create `posts/static/posts/main.js`:
+
+```javascript
+console.log('Hello world')
+```
+
+
+
+Create template `posts/templates/posts/main.html`:
+
+```django
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}posts{% endblock title %}
+
+{% block scripts %}
+  <script src="{% static 'posts/main.js' %}" defer></script>
+{% endblock scripts %}
+
+{% block content %}
+  {% for obj in qs %}<b>{{ obj.title }}</b> - {{ obj.body }}</br>  {% endfor %}
+{% endblock content %}
+```
+
+
+
+Create a view in `posts/views.py` which uses the `main.html` template:
+
+```python
+from django.shortcuts import render
+from .models import Post
+
+# Create your views here.
+def post_list_and_create(request):
+  qs = Post.objects.all()
+  return render(request, 'posts/main.html', {'qs':qs})
+```
+
+Create `posts/urls.py`  to register urls:
+
+```python
+from django.urls import path
+from .views import (
+  post_list_and_create,
+)
+
+app_name = 'posts'
+
+urlpatterns = [
+  path('', post_list_and_create, name='main-board'),
+]
+```
+
+Bring urls into the project's urls `/src/posts_project/urls.py`:
+
+```python
+urlpatterns += [path('', include('posts.urls', namespace='posts'))]
+```
+
+At this moment you  can open `http://localhost:8000/`
+
