@@ -258,11 +258,13 @@ Create template `posts/templates/posts/main.html`:
 {% block title %}posts{% endblock title %}
 
 {% block scripts %}
+  {% comment %} defer attribute is important as it instructs the browser to postpone the execution of JS until page is loaded {% endcomment %}
   <script src="{% static 'posts/main.js' %}" defer></script>
 {% endblock scripts %}
 
 {% block content %}
   {% for obj in qs %}<b>{{ obj.title }}</b> - {{ obj.body }}</br>  {% endfor %}
+  <div id="hello-world"></div>
 {% endblock content %}
 ```
 
@@ -303,3 +305,23 @@ urlpatterns += [path('', include('posts.urls', namespace='posts'))]
 
 At this moment you  can open `http://localhost:8000/`
 
+## 3.6. First DOM Manipulation
+
+Modify `posts/templates/main.html`:
+
+```django
+{% block content %}
+  {% for obj in qs %}<b>{{ obj.title }}</b> - {{ obj.body }}</br>  {% endfor %}
+  <div id="hello-world"></div>
+{% endblock content %}
+```
+
+Modify `posts/static/posts/main.js`:
+
+```javascript
+const helloBox = document.getElementById('hello-world')
+
+helloBox.innerHTML = 'Hello me'
+```
+
+You could also update the text content:`helloBox.textContent = 'Hello me'`
