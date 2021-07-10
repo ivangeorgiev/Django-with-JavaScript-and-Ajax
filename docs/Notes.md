@@ -325,3 +325,42 @@ helloBox.innerHTML = 'Hello me'
 ```
 
 You could also update the text content:`helloBox.textContent = 'Hello me'`
+
+## 3.7. First Ajax Call
+
+Modify `posts/views.py`
+
+```python
+from django.http import JsonResponse
+
+def hello_world_view(request):
+  return JsonResponse({'text':'hello ajax'})
+```
+
+register the new view in `posts/views.py`:
+
+```python
+urlpatterns = [
+  path('', post_list_and_create, name='main-board'),
+  path('hello-world/', hello_world_view, name='hello-world'),
+]
+```
+
+Open `http://localhost:8000/hello-world` to observe result.
+
+Modify `posts/static/posts/main.js`:
+
+```javascript
+$.ajax({
+  type: 'GET',
+  url: '/hello-world/',
+  success: resp => {
+    console.log(resp)
+    helloBox.textContent = resp.text
+  },
+  error: err => {
+    console.error(err)
+  }
+})
+```
+
