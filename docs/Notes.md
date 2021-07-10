@@ -196,5 +196,40 @@ admin.site.register(Profile)
 
 **Create a profile for the superuser** from admin.
 
+## 3.4. Creating post_save Signal for Profile Creation
 
+**Create file** `/src/profiles/signals.py`
+
+```python
+from .models import Profile
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=User)
+def post_save_create_profile(sender, instance:User, created:bool, *args, **kwargs):
+  if created:
+    Profile.objects.create(user=instance)
+```
+
+Modify `/src/profiles/apps.py` to read the signals:
+
+```python
+from django.apps import AppConfig
+
+class ProfilesConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'profiles'
+
+    def ready(self):
+        import profiles.signals
+```
+
+Modify `/src/profiles/__init__.py` to define default app config
+
+```python
+default_app_config = 'profiles.apps.ProfilesConfig'
+```
+
+Go to django admin and create `test_user` verify profile got created.
 
