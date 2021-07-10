@@ -9,6 +9,7 @@
 {% endblock scripts %}
 
 {% block content %}
-  {% for obj in qs %}<b>{{ obj.title }}</b> - {{ obj.body }}</br>  {% endfor %}
+  {% comment %} {% for obj in qs %}<b>{{ obj.title }}</b> - {{ obj.body }}</br>  {% endfor %} {% endcomment %}
+  <div id="posts-box"></div>
   <div id="hello-world"></div>
 {% endblock content %}

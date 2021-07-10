@@ -364,3 +364,100 @@ $.ajax({
 })
 ```
 
+## 3.8. Getting Posts Objects with Ajax
+
+### Dirty solution
+
+`posts.views.py`
+
+```python
+from django.core import serializers
+
+def load_post_data_view(request):
+  qs = Post.objects.all()
+  data = serializers.serialize('json', qs)
+  return JsonResponse({'data':data})
+```
+
+
+
+### Better solution
+
+Modify the Post model in `posts/models.py` adding `as_dict` method:
+
+```python
+  def as_dict(self):
+    d = {
+      'id': self.id,
+      'title': self.title,
+      'body': self.body,
+      'author': {
+        'username': self.author.user.username,
+        # 'author_avatar': self.author.avatar
+      }
+    }
+    return d
+```
+
+
+
+Modify `posts/views.py`:
+
+```python
+def load_post_data_view(request):
+  qs = Post.objects.all()
+  data = [o.as_dict() for o in qs]
+  return JsonResponse({'data':data})
+```
+
+Register the view in `posts/urls.py`:
+
+```python
+urlpatterns = [
+  path('', post_list_and_create, name='main-board'),
+  path('api/posts/', load_post_data_view, name='posts-data'),
+  path('hello-world/', hello_world_view, name='hello-world'),
+]
+```
+
+Open `http://localhost:8000/api/posts/` to explore the results.
+
+
+
+Modify `posts/templates/posts/main.html`:
+
+```django
+{% block content %}
+  {% comment %} {% for obj in qs %}<b>{{ obj.title }}</b> - {{ obj.body }}</br>  {% endfor %} {% endcomment %}
+  <div id="posts-box"></div?
+  <div id="hello-world"></div>
+{% endblock content %}
+```
+
+Modify (replace) `posts/static/posts/main.js`:
+
+```javascript
+console.log('Hello world')
+
+const postBox = document.getElementById('posts-box')
+
+$.ajax({
+  type: 'GET',
+  url: '/api/posts/',
+  success: resp => {
+    console.log(resp)
+    postBox.innerHTML = ''
+    resp.data.forEach( el => {
+      // Backticks for multiline interpolated string.
+      postBox.innerHTML += `
+        <b>${el.title}</b> - ${el.body}<br />
+      `
+    })
+  },
+  error: err => {
+    console.error(err)
+  }
+})
+```
+
+Navigate to `http://localhost:8000` to explore the result.

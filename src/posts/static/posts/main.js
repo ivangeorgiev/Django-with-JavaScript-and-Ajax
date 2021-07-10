@@ -1,15 +1,18 @@
 console.log('Hello world')
 
-const helloBox = document.getElementById('hello-world')
-
-helloBox.innerHTML = 'Hello me'
+const postBox = document.getElementById('posts-box')
 
 $.ajax({
   type: 'GET',
-  url: '/hello-world/',
+  url: '/api/posts/',
   success: resp => {
     console.log(resp)
-    helloBox.textContent = resp.text
+    postBox.innerHTML = ''
+    resp.data.forEach( el => {
+      postBox.innerHTML += `
+        <b>${el.title}</b> - ${el.body}<br />
+      `
+    })
   },
   error: err => {
     console.error(err)
